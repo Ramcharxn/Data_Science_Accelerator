@@ -619,23 +619,24 @@
 
     history.forEach(turn => {
       if (turn.role === 'human') {
-        // user bubble
         chatMessages.insertAdjacentHTML('beforeend', `
-          <div class="flex justify-end">
-            <div class="flex gap-3 items-start">
-              <div class="rounded-2xl rounded-tr-sm bg-[#b21f17] text-white px-4 py-2 max-w-full">
-                ${escapeHtml(turn.content)}
-              </div>
+          <div class="flex gap-3 justify-end items-start">
+            <div class="rounded-2xl rounded-tr-sm bg-[#b21f17] text-white px-4 py-2 max-w-[80%]">
+              ${escapeHtml(turn.content)}
+            </div>
+            <div class="h-8 w-8 shrink-0 grid place-items-center rounded-full bg-gray-200 text-gray-700 font-semibold">
+              You
             </div>
           </div>
         `);
-      } else if (turn.role === 'ai') {
+      }
+      else if (turn.role === 'ai') {
         // assistant bubble (reuse same markdown + math logic you have)
         const replyText = turn.content.trim();
         const { replaced, math } = extractMathSegments(replyText);
         const htmlWithPlaceholders = marked.parse(replaced);
         const replyHtml = restoreMathSegments(htmlWithPlaceholders, math);
-        if (replyHtml.length() === 0) return;
+        if (!replyHtml || replyHtml.length === 0) return;
 
         chatMessages.insertAdjacentHTML('beforeend', `
           <div class="flex gap-3">
