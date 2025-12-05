@@ -10,7 +10,7 @@ import bcrypt
 import uvicorn
 from datetime import datetime, timedelta
 import jwt
-from graph_app import build_graph, get_chat_history, checkpointer
+from graph_app import get_graph, get_chat_history, checkpointer
 from langchain_core.messages import HumanMessage
 from fastapi import Request, HTTPException
 from groq import APIStatusError
@@ -307,7 +307,7 @@ async def chat(request: Request):
 
     config = {'configurable': {'thread_id': thread_id}}
     try:
-        response = build_graph().invoke(state, config=config)
+        response = get_graph().invoke(state, config=config)
     except APIStatusError as e:
         # Groq specific "request too large" error
         if e.status_code == 413 or getattr(e, "code", None) == "rate_limit_exceeded":
@@ -336,7 +336,7 @@ async def chat_history(request: Request):
     if not current_email:
         raise HTTPException(status_code=401, detail="Not authenticated")
 
-    history = get_chat_history(build_graph(), current_email)
+    history = get_chat_history(get_graph(), current_email)
     # JSON-serialisable: [{role: "human"/"ai", content: "..."}]
     history_payload = [
         {"role": role, "content": content} for role, content in history

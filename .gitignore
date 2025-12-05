@@ -2,3 +2,4 @@
 main.py
 app.py
 .env
+/__pycache__

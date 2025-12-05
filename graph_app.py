@@ -35,7 +35,6 @@ checkpointer = MongoDBSaver(
     collection_name="chat_checkpoints"
 )
 
-
 def build_graph():
 
     embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-MiniLM-L3-v2")
@@ -131,6 +130,14 @@ def build_graph():
 
     return graph
 
+
+graph_instance = None  # cache
+
+def get_graph():
+    global graph_instance
+    if graph_instance is None:
+        graph_instance = build_graph()
+    return graph_instance
 
 
 def get_chat_history(graph, thread_id: str) -> List[Tuple[str, str]]:
