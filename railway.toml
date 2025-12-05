@@ -5,4 +5,4 @@ builder = "Nixpacks"
 startCommand = "uvicorn server:app --host 0.0.0.0 --port $PORT"
 
 [nixpacks]
-pythonVersion = "3.10"
+pythonVersion = "3.12"
