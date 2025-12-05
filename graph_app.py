@@ -36,85 +36,85 @@ checkpointer = MongoDBSaver(
 )
 
 
-
-embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-MiniLM-L3-v2")
-
-vector_store = MongoDBAtlasVectorSearch(
-    # documents=chunks,
-    embedding=embedding,
-    collection=collection,
-    index_name="doc_vector_index",
-    embedding_key="embedding",
-    text_key="page_content",
-)
-
-retriever = vector_store.as_retriever(search_kwargs={"k": 4})
-
-
-@tool
-def langchain_info(query: str) -> str:
-    """
-    Retrieve information from my Data Science knowledge base.
-
-    Use this tool whenever the user asks a question about:
-    - Data Science
-    - Machine Learning / Deep Learning
-    - Statistics or Probability
-    - Computer Science
-    - Data Strcuture and Algorithm
-    - Large Language Models (LLMs)
-    - Python libraries commonly used for these (NumPy, pandas, scikit-learn, etc.)
-    - Any topic that is likely covered in the indexed PDFs / web articles
-
-    The `query` argument should be a short natural-language search query
-    that captures the user's question or topic (you can reuse the user's
-    question directly).
-
-    If the user's question is not related to these topics, do NOT call this
-    tool.
-    """
-    docs: list[Document] = retriever.invoke(query)
-    joined = "\n\n".join(d.page_content for d in docs)
-    return joined
-
-
-tools = [langchain_info]
-llm = ChatGroq(model='openai/gpt-oss-120b')
-llm_with_tools = llm.bind_tools(tools)
-
-system_prompt = """
-You are a data science assistant.
-
-You MUST use the `langchain_info` tool for ANY question that is:
-- About data science, machine learning, deep learning, statistics, probability, Computer Science, Data Strcuture and Algorithm
-- About Python libraries used for data science (NumPy, pandas, scikit-learn, etc.),
-- Or likely covered in the indexed documents.
-
-You are NOT allowed to answer those questions from your own training data
-without first calling the tool.
-
-For questions clearly outside these topics, do NOT call the tool; instead briefly explain that the
-question is out of scope.
-
-Always give short, concise answers. Only provide more detail when explicitly asked, and even then keep the explanation brief and not overly long.
-Dont keep the answers more that 2 line undless asked to explain in detailed, and not more that 10 lines in worst case
-"""
-
-
-def ChatBot(state: State):
-    history = state["messages"]
-    max_history_messages = 6  # tweak as needed
-
-    # only keep the most recent messages
-    recent = history[-max_history_messages:]
-
-    msgs = [SystemMessage(content=system_prompt)] + recent
-
-    return {"messages": llm_with_tools.invoke(msgs)}
-
-
-# 2) Build graph
 def build_graph():
+
+    embedding = HuggingFaceEmbeddings(model_name="sentence-transformers/paraphrase-MiniLM-L3-v2")
+
+    vector_store = MongoDBAtlasVectorSearch(
+        # documents=chunks,
+        embedding=embedding,
+        collection=collection,
+        index_name="doc_vector_index",
+        embedding_key="embedding",
+        text_key="page_content",
+    )
+
+    retriever = vector_store.as_retriever(search_kwargs={"k": 4})
+
+
+    @tool
+    def langchain_info(query: str) -> str:
+        """
+        Retrieve information from my Data Science knowledge base.
+
+        Use this tool whenever the user asks a question about:
+        - Data Science
+        - Machine Learning / Deep Learning
+        - Statistics or Probability
+        - Computer Science
+        - Data Strcuture and Algorithm
+        - Large Language Models (LLMs)
+        - Python libraries commonly used for these (NumPy, pandas, scikit-learn, etc.)
+        - Any topic that is likely covered in the indexed PDFs / web articles
+
+        The `query` argument should be a short natural-language search query
+        that captures the user's question or topic (you can reuse the user's
+        question directly).
+
+        If the user's question is not related to these topics, do NOT call this
+        tool.
+        """
+        docs: list[Document] = retriever.invoke(query)
+        joined = "\n\n".join(d.page_content for d in docs)
+        return joined
+
+
+    tools = [langchain_info]
+    llm = ChatGroq(model='openai/gpt-oss-120b')
+    llm_with_tools = llm.bind_tools(tools)
+
+    system_prompt = """
+    You are a data science assistant.
+
+    You MUST use the `langchain_info` tool for ANY question that is:
+    - About data science, machine learning, deep learning, statistics, probability, Computer Science, Data Strcuture and Algorithm
+    - About Python libraries used for data science (NumPy, pandas, scikit-learn, etc.),
+    - Or likely covered in the indexed documents.
+
+    You are NOT allowed to answer those questions from your own training data
+    without first calling the tool.
+
+    For questions clearly outside these topics, do NOT call the tool; instead briefly explain that the
+    question is out of scope.
+
+    Always give short, concise answers. Only provide more detail when explicitly asked, and even then keep the explanation brief and not overly long.
+    Dont keep the answers more that 2 line undless asked to explain in detailed, and not more that 10 lines in worst case
+    """
+
+
+    def ChatBot(state: State):
+        history = state["messages"]
+        max_history_messages = 6  # tweak as needed
+
+        # only keep the most recent messages
+        recent = history[-max_history_messages:]
+
+        msgs = [SystemMessage(content=system_prompt)] + recent
+
+        return {"messages": llm_with_tools.invoke(msgs)}
+
+
+    # 2) Build graph
     graph_builder = StateGraph(State)
 
     graph_builder.add_node("chatbot", ChatBot)
