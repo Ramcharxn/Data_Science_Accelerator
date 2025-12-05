@@ -99,6 +99,8 @@ def build_graph():
 
     Always give short, concise answers. Only provide more detail when explicitly asked, and even then keep the explanation brief and not overly long.
     Dont keep the answers more that 2 line undless asked to explain in detailed, and not more that 10 lines in worst case
+
+    Try to avoid giving answer in tables, unless asked by user specifically to give in tabular format
     """
 
 

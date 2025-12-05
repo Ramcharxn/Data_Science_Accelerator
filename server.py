@@ -20,7 +20,7 @@ from groq import APIStatusError
 load_dotenv()
 app = FastAPI(title="DSLA")
 templates = Jinja2Templates(directory="templates")
-
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Password hashing configuration
 def hash_password(password: str) -> str:
