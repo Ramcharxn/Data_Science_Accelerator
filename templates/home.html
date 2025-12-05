@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Data Science Learning Accelerator</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* glossy game-ball look */
+    .node {
+      background: radial-gradient(circle at 35% 28%, #ffffff 0%, #eef0f3 45%, #cdd1d8 100%);
+      box-shadow:
+        inset 0 6px 14px rgba(255,255,255,.9),
+        inset 0 -10px 18px rgba(0,0,0,.12),
+        0 10px 22px rgba(0,0,0,.10);
+    }
+    /* subtle rim */
+    .node::after{
+      content:"";
+      position:absolute; inset:0;
+      border-radius:9999px;
+      box-shadow: inset 0 0 0 2px rgba(0,0,0,.08);
+    }
+    .typing-dots {
+    display: inline-flex;
+    gap: 0.25rem;
+    align-items: center;
+  }
+  .typing-dot {
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 9999px;
+    background-color: #9ca3af; /* gray-400 */
+    animation: typing-bounce 1s infinite ease-in-out;
+  }
+  .typing-dot:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  .typing-dot:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+  @keyframes typing-bounce {
+    0%, 80%, 100% {
+      opacity: 0.3;
+      transform: translateY(0);
+    }
+    40% {
+      opacity: 1;
+      transform: translateY(-2px);
+    }
+  }
+  .assistant-message p {
+    margin-top: 0.15rem;
+    margin-bottom: 0.15rem;
+  }
+  .assistant-message > :first-child {
+    margin-top: 0;
+  }
+  .assistant-message > :last-child {
+    margin-bottom: 0;
+  }
+    /* --- Code styling inside assistant replies --- */
+
+  /* Block code (```...``` in markdown) */
+  .assistant-message pre {
+    background: #020617;            /* dark navy */
+    color: #e5e7eb;                 /* light text */
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    overflow-x: auto;
+    margin-top: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .assistant-message pre code {
+    background: transparent;        /* avoid double background */
+    padding: 0;
+    border-radius: 0;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+
+  /* Inline code (`like this`) */
+  .assistant-message code {
+    background: #f3f4f6;
+    padding: 0.15rem 0.35rem;
+    border-radius: 0.25rem;
+    font-size: 0.85em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  }
+
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)'], ['$', '$']],
+        displayMath: [['\\[', '\\]'], ['$$', '$$']]
+      }
+    };
+  </script>
+  <script id="MathJax-script" defer
+          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body class="bg-white text-gray-900 antialiased">
+
+  <!-- Navbar (matches your second page) -->
+  <header class="bg-[#b21f17] text-white shadow-md">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between py-3">
+        <!-- Left: Brand -->
+        <h1 class="text-lg sm:text-2xl font-semibold tracking-wide">
+          Data Science Learning Accelerator
+        </h1>
+
+        <!-- Mobile Menu Button -->
+        <button id="menu-btn" class="md:hidden flex flex-col space-y-1.5 focus:outline-none" aria-label="Open menu">
+          <span class="w-6 h-0.5 bg-white"></span>
+          <span class="w-6 h-0.5 bg-white"></span>
+          <span class="w-6 h-0.5 bg-white"></span>
+        </button>
+
+        <!-- Center: Nav Links -->
+        <nav id="menu" class="hidden md:flex items-center gap-3">
+          <a href="#" class="rounded-lg border border-white/40 px-3 py-1.5 hover:bg-white/10">Tracks</a>
+          <a href="#" class="rounded-lg border border-white/40 px-3 py-1.5 hover:bg-white/10">Community</a>
+          <a href="/logout" class="rounded-lg border border-white/40 px-3 py-1.5 hover:bg-white/10">Logout</a>
+        </nav>
+
+        <!-- Right: Search + Profile -->
+        <div class="hidden md:flex items-center gap-3 ml-4">
+          <input type="text" placeholder="Search Bar"
+                class="w-48 lg:w-64 rounded-md bg-gray-100 px-3 py-2 text-gray-900 placeholder-gray-400 shadow-inner outline-none focus:ring-2 focus:ring-yellow-300" />
+          <button class="h-10 w-10 grid place-items-center rounded-full bg-white text-[#b21f17] font-semibold shadow">
+            U
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Dropdown Menu -->
+      <div id="mobile-menu" class="hidden flex flex-col gap-2 pb-3 md:hidden">
+        <a href="#" class="block rounded-lg border border-white/30 px-3 py-2 hover:bg-white/10">Tracks</a>
+        <a href="#" class="block rounded-lg border border-white/30 px-3 py-2 hover:bg-white/10">Community</a>
+        <div class="mt-2 flex items-center gap-2">
+          <input type="text" placeholder="Search Bar"
+                class="w-full rounded-md bg-gray-100 px-3 py-2 text-gray-900 placeholder-gray-400 shadow-inner outline-none focus:ring-2 focus:ring-yellow-300" />
+          <button class="h-10 w-10 grid place-items-center rounded-full bg-white text-[#b21f17] font-semibold shadow">
+            U
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- GAME PATH -->
+  <section class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-10 pb-24">
+    <!-- Desktop/Laptop: candy path -->
+    <div class="relative hidden md:block h-[360px]">
+      <!-- The wavy ribbon -->
+      <svg class="absolute inset-0 -z-10 w-full h-full" viewBox="0 0 1400 360" preserveAspectRatio="none">
+        <!-- fat shadow -->
+        <path d="M60,300
+                 C 260,160 440,80 660,150
+                 S 1030,310 1260,240"
+              fill="none" stroke="rgba(97,13,7,.25)" stroke-width="42" stroke-linecap="round"/>
+        <!-- main ribbon -->
+        <path d="M60,300
+                 C 260,160 440,80 660,150
+                 S 1030,310 1260,240"
+              fill="none" stroke="#b21f17" stroke-width="28" stroke-linecap="round"/>
+      </svg>
+
+      <!-- Four level nodes placed ON the curve -->
+      <!-- 1 -->
+      <div class="absolute -translate-x-1/2 -translate-y-1/2 left-[9%] top-[300px]">
+        <div class="relative node h-44 w-44 rounded-full grid place-items-center">
+          <div class="text-center font-semibold leading-tight text-gray-800">
+            <div>Fundamentals</div><div>of Data Science</div>
+          </div>
+        </div>
+      </div>
+      <!-- 2 (higher on the wave) -->
+      <div class="absolute -translate-x-1/2 -translate-y-1/2 left-[37%] top-[190px]">
+        <div class="relative node h-44 w-44 rounded-full grid place-items-center">
+          <div class="text-center font-semibold leading-tight text-gray-800">
+            <div>Data Types</div><div>and Structures</div>
+          </div>
+        </div>
+      </div>
+      <!-- 3 (peak) -->
+      <div class="absolute -translate-x-1/2 -translate-y-1/2 left-[64%] top-[130px]">
+        <div class="relative node h-44 w-44 rounded-full grid place-items-center">
+          <div class="text-center font-semibold leading-tight text-gray-800">
+            <div>Statistics and</div><div>Probability</div>
+          </div>
+        </div>
+      </div>
+      <!-- 4 (downhill) -->
+      <div class="absolute -translate-x-1/2 -translate-y-1/2 left-[90%] top-[240px]">
+        <div class="relative node h-44 w-44 rounded-full grid place-items-center">
+          <div class="text-center font-semibold leading-tight text-gray-800">
+            <div>Python for</div><div>Data Science</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bullet lists aligned under each node -->
+    <div class="hidden md:grid grid-cols-4 gap-6 mt-8">
+      <ul class="space-y-1 list-disc list-inside">
+        <li><a class="underline" href="#">What is Data Science</a></li>
+        <li><a class="underline" href="#">Early History of Data Science</a></li>
+        <li><a class="underline" href="#">Modern History of Data Science</a></li>
+      </ul>
+      <ul class="space-y-1 list-disc list-inside">
+        <li><a class="underline" href="#">Overview of Data Types</a></li>
+        <li><a class="underline" href="#">Categorical Data</a></li>
+        <li><a class="underline" href="#">Numerical Data</a></li>
+      </ul>
+      <ul class="space-y-1 list-disc list-inside">
+        <li><a class="underline" href="#">Probability in Data Science</a></li>
+        <li><a class="underline" href="#">Introduction to Descriptive Statistics</a></li>
+        <li><a class="underline" href="#">Measures of Central Tendency</a></li>
+      </ul>
+      <ul class="space-y-1 list-disc list-inside">
+        <li><a class="underline" href="#">Introduction to Python</a></li>
+        <li><a class="underline" href="#">Understanding Variables and Data Types</a></li>
+        <li><a class="underline" href="#">Working with Strings</a></li>
+      </ul>
+    </div>
+
+    <!-- Mobile/Tablet: stacked path with nodes on a vertical curve -->
+    <div class="md:hidden relative">
+      <div class="absolute left-6 right-6 top-10 bottom-10 -z-10">
+        <svg class="w-full h-full" viewBox="0 0 360 700" preserveAspectRatio="none">
+          <path d="M50,650 C 200,580 190,460 120,380
+                   S 140,220 300,180"
+                fill="none" stroke="rgba(97,13,7,.25)" stroke-linecap="round" stroke-width="34"/>
+          <path d="M50,650 C 200,580 190,460 120,380
+                   S 140,220 300,180"
+                fill="none" stroke="#b21f17" stroke-linecap="round" stroke-width="24"/>
+        </svg>
+      </div>
+
+      <div class="space-y-10 py-6">
+        <div class="flex items-start gap-4">
+          <div class="relative node h-28 w-28 rounded-full shrink-0 grid place-items-center">
+            <div class="text-center text-sm font-semibold leading-tight">
+              Fundamentals<br/>of Data Science
+            </div>
+          </div>
+          <ul class="mt-2 space-y-1 list-disc">
+            <li><a class="underline" href="#">What is Data Science</a></li>
+            <li><a class="underline" href="#">Early History</a></li>
+            <li><a class="underline" href="#">Modern History</a></li>
+          </ul>
+        </div>
+
+        <div class="flex items-start gap-4">
+          <div class="relative node h-28 w-28 rounded-full shrink-0 grid place-items-center">
+            <div class="text-center text-sm font-semibold leading-tight">
+              Data Types<br/>and Structures
+            </div>
+          </div>
+          <ul class="mt-2 space-y-1 list-disc">
+            <li><a class="underline" href="#">Overview of Data Types</a></li>
+            <li><a class="underline" href="#">Categorical Data</a></li>
+            <li><a class="underline" href="#">Numerical Data</a></li>
+          </ul>
+        </div>
+
+        <div class="flex items-start gap-4">
+          <div class="relative node h-28 w-28 rounded-full shrink-0 grid place-items-center">
+            <div class="text-center text-sm font-semibold leading-tight">
+              Statistics &amp;<br/>Probability
+            </div>
+          </div>
+          <ul class="mt-2 space-y-1 list-disc">
+            <li><a class="underline" href="#">Probability</a></li>
+            <li><a class="underline" href="#">Descriptive Statistics</a></li>
+            <li><a class="underline" href="#">Central Tendency</a></li>
+          </ul>
+        </div>
+
+        <div class="flex items-start gap-4">
+          <div class="relative node h-28 w-28 rounded-full shrink-0 grid place-items-center">
+            <div class="text-center text-sm font-semibold leading-tight">
+              Python for<br/>Data Science
+            </div>
+          </div>
+          <ul class="mt-2 space-y-1 list-disc">
+            <li><a class="underline" href="#">Intro to Python</a></li>
+            <li><a class="underline" href="#">Variables &amp; Types</a></li>
+            <li><a class="underline" href="#">Strings</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Continue arrow -->
+    <div class="mt-10 flex items-center justify-end gap-6">
+      <span class="text-gray-700">Continue to Path</span>
+      <svg class="h-8 w-16" viewBox="0 0 80 24" fill="none">
+        <path d="M4 12 H64" stroke="#b21f17" stroke-width="4" stroke-linecap="round"/>
+        <path d="M64 12 L54 6 M64 12 L54 18" stroke="#b21f17" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </section>
+
+  <!-- Bottom-right floating actions (same as second page) -->
+  <div class="fixed bottom-6 right-6 flex items-end gap-4">
+    <button id="askBtn"
+            class="flex items-center gap-3 rounded-2xl bg-white/95 px-4 py-2 shadow-lg ring-1 ring-black/5 hover:shadow-xl">
+      <span class="text-gray-900 font-medium">Ask</span><span class="text-xl">✨</span>
+    </button>
+    <button class="h-14 w-14 grid place-items-center rounded-full bg-red-600 text-white shadow-lg ring-2 ring-red-300">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 12c2.485 0 4.5-2.015 4.5-4.5S14.485 3 12 3 7.5 5.015 7.5 7.5 9.515 12 12 12zm0 1.5c-3.038 0-9 1.523-9 4.5V21h18v-3c0-2.977-5.962-4.5-9-4.5z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Chat Panel (bottom-right, no backdrop) -->
+<div id="chatModal" class="fixed bottom-6 right-6 z-50 hidden" role="dialog" aria-modal="false" aria-labelledby="chatTitle">
+
+  <div id="chatPanel" class="w-[92vw] max-w-2xl rounded-2xl bg-white shadow-2xl ring-1 ring-black/10 overflow-hidden">
+  <!-- header -->
+  <div class="flex items-center justify-between px-5 py-3 border-b bg-white/80 backdrop-blur">
+    <h2 id="chatTitle" class="text-base font-semibold">Ask Assistant</h2>
+
+    <div class="flex items-center gap-1">
+      <!-- Clear / trash button -->
+      <button
+        id="chatClear"
+        class="rounded-full p-1 hover:bg-gray-100"
+        aria-label="Clear conversation"
+        type="button"
+      >
+        <!-- Trash icon -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M8 2a1 1 0 00-.894.553L6.382 4H4a1 1 0 000 2h.293l.823 9.878A2 2 0 007.11 18h5.78a2 2 0 001.994-2.122L15.707 6H16a1 1 0 100-2h-2.382l-.724-1.447A1 1 0 0012 2H8zM8 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" />
+        </svg>
+      </button>
+
+      <!-- Close button -->
+      <button
+        id="chatClose"
+        class="rounded-full p-1 hover:bg-gray-100"
+        aria-label="Close chat"
+        type="button"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+
+    <!-- messages -->
+    <div id="chatMessages" class="px-5 py-4 max-h-[55vh] overflow-y-auto space-y-3">
+      <div class="flex gap-3">
+        <div class="h-8 w-8 shrink-0 grid place-items-center rounded-full bg-[#b21f17] text-white font-semibold">A</div>
+          <div class="rounded-2xl rounded-tl-sm bg-gray-100 px-4 py-2 max-w-[80%]">
+            Hi! What would you like to explore on this path?
+          </div>
+      </div>
+    </div>
+
+    <!-- input -->
+    <form id="chatForm" class="border-t px-3 py-3 flex items-end gap-2 bg-white">
+      <textarea id="chatInput"
+                class="min-h-[44px] max-h-40 grow rounded-xl border border-gray-300 px-3 py-2 shadow-inner outline-none focus:ring-2 focus:ring-yellow-300"
+                placeholder="Type your question and press Enter..."
+                rows="1"></textarea>
+      <button class="rounded-xl bg-[#b21f17] px-4 py-2 text-white font-medium hover:brightness-110 focus:ring-2 focus:ring-offset-2 focus:ring-[#b21f17]">
+        Send
+      </button>
+    </form>
+  </div>
+</div>
+
+
+  <script>
+    const menuBtn = document.getElementById('menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    menuBtn?.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+  </script>
+
+  <!-- Mobile menu toggle -->
+<script>
+  // Elements
+  const askBtn = document.getElementById('askBtn');
+  const chatModal = document.getElementById('chatModal');
+  const chatPanel = document.getElementById('chatPanel');
+  const chatClose = document.getElementById('chatClose');
+  const chatInput = document.getElementById('chatInput');
+  const chatForm = document.getElementById('chatForm');
+  const chatMessages = document.getElementById('chatMessages');
+
+  // Open/close helpers
+  function openChat() {
+    chatModal.classList.remove('hidden');
+    setTimeout(() => chatInput.focus(), 10);
+  }
+  function closeChat() {
+    chatModal.classList.add('hidden');
+  }
+
+  // Open / close wiring
+  askBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    openChat();
+  });
+  chatClose.addEventListener('click', closeChat);
+
+  document.addEventListener('mousedown', (e) => {
+    if (chatModal.classList.contains('hidden')) return;
+    if (!chatPanel.contains(e.target) && e.target !== askBtn) {
+      closeChat();
+    }
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (!chatModal.classList.contains('hidden') && e.key === 'Escape') closeChat();
+  });
+
+  // Auto-grow textarea
+  chatInput.addEventListener('input', () => {
+    chatInput.style.height = 'auto';
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 160) + 'px';
+  });
+
+  // Chat submit + backend + markdown + math
+  chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    // 1. User message
+    chatMessages.insertAdjacentHTML('beforeend', `
+      <div class="flex gap-3 justify-end items-start">
+        <div class="rounded-2xl rounded-tr-sm bg-[#b21f17] text-white px-4 py-2 max-w-[80%]">
+          ${escapeHtml(text)}
+        </div>
+        <div class="h-8 w-8 shrink-0 grid place-items-center rounded-full bg-gray-200 text-gray-700 font-semibold">
+          You
+        </div>
+      </div>
+    `);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+
+    // 2. Typing indicator
+    const typingId = 'assistant-typing';
+    chatMessages.insertAdjacentHTML('beforeend', `
+      <div id="${typingId}" class="flex gap-3 mt-2">
+        <div class="h-8 w-8 shrink-0 grid place-items-center rounded-full bg-[#b21f17] text-white font-semibold">A</div>
+        <div class="rounded-2xl rounded-tl-sm bg-gray-100 px-4 py-2 max-w-[80%]">
+          <span class="text-sm text-gray-500 animate-pulse">Thinking...</span>
+        </div>
+      </div>
+    `);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    try {
+      // 3. Call backend (send both keys for compatibility)
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          messages: text
+        })
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error('Server error body:', errText);
+        throw new Error('Server error: ' + res.status);
+      }
+
+      const data = await res.json();
+      const replyRaw =
+        typeof data.output === 'string' ? data.output :
+        typeof data.reply === 'string' ? data.reply :
+        JSON.stringify(data);
+
+      const replyText = replyRaw.trim();
+
+      // Remove typing
+      const typingEl = document.getElementById(typingId);
+      if (typingEl) typingEl.remove();
+
+      // If we somehow got an empty reply, don't render a blank bubble
+      if (!replyText) {
+        console.warn('Empty reply from backend, skipping render:', data);
+        return;
+      }
+
+      // --- Markdown + Math: protect LaTeX, then run marked, then restore ---
+      const { replaced, math } = extractMathSegments(replyText);
+
+
+      marked.setOptions({
+        breaks: true,
+        mangle: false,
+        headerIds: false
+      });
+
+      const htmlWithPlaceholders = marked.parse(replaced);
+      const replyHtml = restoreMathSegments(htmlWithPlaceholders, math);
+
+      // 4. Assistant message (markdown + math, scroll if long)
+      chatMessages.insertAdjacentHTML('beforeend', `
+        <div class="flex gap-3">
+          <div class="h-8 w-8 shrink-0 grid place-items-center rounded-full bg-[#b21f17] text-white font-semibold">A</div>
+          <div class="rounded-2xl rounded-tl-sm bg-gray-100 px-4 py-2 max-w-[80%] overflow-x-auto">
+            <div class="assistant-message break-words">
+              ${replyHtml}
+            </div>
+          </div>
+        </div>
+      `);
+
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      // 5. MathJax for last assistant message (wait for startup)
+      if (window.MathJax) {
+        const mj = window.MathJax;
+        const msgs = chatMessages.querySelectorAll('.assistant-message');
+        const lastMsg = msgs[msgs.length - 1];
+
+        if (lastMsg) {
+          (mj.startup?.promise || Promise.resolve())
+            .then(() => mj.typesetPromise([lastMsg]))
+            .catch(err => console.error('MathJax error:', err));
+        }
+      }
+
+
+
+    } catch (err) {
+      console.error('Error talking to backend:', err);
+
+      const typingEl = document.getElementById(typingId);
+      if (typingEl) typingEl.remove();
+
+      chatMessages.insertAdjacentHTML('beforeend', `
+        <div class="flex gap-3">
+          <div class="rounded-2xl bg-red-100 px-4 py-2 text-red-600 border border-red-200 text-sm">
+            ⚠️ <strong>Connection Error:</strong> Is your Python server running?<br>
+            Check your terminal for errors.
+          </div>
+        </div>
+      `);
+    }
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  });
+
+  // Escape for user text only (does NOT touch backslashes, so LaTeX is safe)
+// Escape for user text only (does NOT touch backslashes, so LaTeX is safe)
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, m => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      }[m]));
+    }
+
+    // Extract LaTeX segments so marked doesn't mangle them
+    function extractMathSegments(text) {
+      const math = [];
+      const patterns = [
+        /\$\$[\s\S]*?\$\$/g,        // $$ ... $$
+        /\\\[[\s\S]*?\\\]/g,        // \[ ... \]
+        /\$[^$\n]+\$/g,             // $ ... $
+        /\\\([^\\]*?\\\)/g          // \( ... \)
+      ];
+      let replaced = text;
+
+      patterns.forEach((re) => {
+        replaced = replaced.replace(re, (m) => {
+          const id = math.length;
+          math.push(m);
+          return `@@MATH${id}@@`;
+        });
+      });
+
+      return { replaced, math };
+    }
+
+    // Put LaTeX back into the HTML after markdown rendering
+    function restoreMathSegments(html, math) {
+      return html.replace(/@@MATH(\d+)@@/g, (_, i) => math[Number(i)] || '');
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+  try {
+    const res = await fetch('/chat_history');
+    if (!res.ok) return;
+
+    const data = await res.json();
+    const history = data.history || [];
+
+    if (!history.length) return;
+
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.innerHTML = ''; // clear default greeting
+
+    history.forEach(turn => {
+      if (turn.role === 'human') {
+        // user bubble
+        chatMessages.insertAdjacentHTML('beforeend', `
+          <div class="flex justify-end">
+            <div class="flex gap-3 items-start">
+              <div class="rounded-2xl rounded-tr-sm bg-[#b21f17] text-white px-4 py-2 max-w-full">
+                ${escapeHtml(turn.content)}
+              </div>
+            </div>
+          </div>
+        `);
+      } else if (turn.role === 'ai') {
+        // assistant bubble (reuse same markdown + math logic you have)
+        const replyText = turn.content.trim();
+        const { replaced, math } = extractMathSegments(replyText);
+        const htmlWithPlaceholders = marked.parse(replaced);
+        const replyHtml = restoreMathSegments(htmlWithPlaceholders, math);
+        if (replyHtml.length() === 0) return;
+
+        chatMessages.insertAdjacentHTML('beforeend', `
+          <div class="flex gap-3">
+            <div class="h-8 w-8 shrink-0 grid place-items-center rounded-full bg-[#b21f17] text-white font-semibold">A</div>
+            <div class="rounded-2xl rounded-tl-sm bg-gray-100 px-4 py-2 max-w-[80%] overflow-x-auto">
+              <div class="assistant-message break-words">
+                ${replyHtml}
+              </div>
+            </div>
+          </div>
+        `);
+      }
+    });
+
+    // typeset math for all assistant messages
+    if (window.MathJax) {
+      const mj = window.MathJax;
+      const msgs = chatMessages.querySelectorAll('.assistant-message');
+      (mj.startup?.promise || Promise.resolve())
+        .then(() => mj.typesetPromise(Array.from(msgs)))
+        .catch(console.error);
+    }
+
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  } catch (err) {
+    console.error('Failed to load chat history:', err);
+  }
+});
+
+
+const chatClear = document.getElementById('chatClear');
+
+chatClear.addEventListener('click', async () => {
+  try {
+    const res = await fetch('/clear_history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!res.ok) {
+      console.error('Failed to clear history:', await res.text());
+      return;
+    }
+
+    // Clear UI after server confirms
+    chatMessages.innerHTML = `
+      <div class="flex gap-3">
+        <div class="h-8 w-8 shrink-0 grid place-items-center rounded-full bg-[#b21f17] text-white font-semibold">A</div>
+        <div class="rounded-2xl rounded-tl-sm bg-gray-100 px-4 py-2 max-w-[95%]">
+          Conversation cleared. What would you like to ask next?
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    console.error('Error clearing history:', err);
+  }
+});
+
+
+
+</script>
+
+
+
+</body>
+</html>
