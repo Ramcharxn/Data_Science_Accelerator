@@ -156,6 +156,3 @@ def get_chat_history(graph, thread_id: str) -> List[Tuple[str, str]]:
             history.append((role, m.content))
 
     return history
-
-# This is what we’ll import in the API server:
-graph = build_graph()
